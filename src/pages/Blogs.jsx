@@ -3,10 +3,21 @@ import BlogCard from "../components/BlogCard";
 import { useContext } from "react";
 import { StoreContext } from "../context/StoreContext";
 import { Link } from "react-router-dom";
-import moment from "moment"; // For formatting dates
 
 const Blogs = () => {
   const { blogData } = useContext(StoreContext);
+
+  // Helper function to format dates
+  const formatDate = (dateString) => {
+    if (!dateString) return "Recently Published";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Recently Published";
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,7 +49,7 @@ const Blogs = () => {
               category={blog.category}
               author_name={blog.author.name}
               author_image={blog.author.image}
-              date={moment(blog.createdAt).format("MMM DD, YYYY")}
+              date={formatDate(blog.createdAt)} // native formatting
             />
           ))
         ) : (
@@ -67,7 +78,7 @@ const Blogs = () => {
           </p>
         </div>
 
-        {/* Decorative Shapes for Style */}
+        {/* Decorative Shapes */}
         <div className="absolute top-0 left-0 w-48 h-48 bg-white opacity-10 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
         <div className="absolute bottom-0 right-0 w-72 h-72 bg-white opacity-10 rounded-full translate-x-1/2 translate-y-1/2"></div>
       </section>

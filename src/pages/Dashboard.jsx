@@ -38,23 +38,26 @@ const Dashboard = () => {
       });
       toast.success(res.data.message);
       setFormData({ title: "", category: "", description: "", image: null });
+      fetchBlogs(); // refresh list after creating a blog
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || error.message);
+    }
+  };
+
+  const fetchBlogs = async () => {
+    try {
+      const res = await axios.get("http://localhost:4000/blog/all", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBlogs(res.data.blogs);
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+      toast.error("Failed to fetch blogs");
     }
   };
 
   useEffect(() => {
-    const allBlogs = async () => {
-      try {
-        const res = await axios.get("http://localhost:4000/blog/all", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setBlogs(res.data.blogs);
-      } catch (error) {
-        console.log("error", error);
-      }
-    };
-    allBlogs();
+    fetchBlogs();
   }, []);
 
   const removeBlog = async (blogId) => {
@@ -73,45 +76,51 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-64 bg-gray-900 text-white flex flex-col p-6 shadow-lg">
-        <h2 className="text-2xl font-bold mb-8">Dashboard</h2>
-        <button
-          className={`w-full text-left py-2 px-4 mb-2 rounded-lg transition ${
-            activeTab === "post"
-              ? "bg-orange-500"
-              : "hover:bg-gray-700 bg-gray-800"
-          }`}
-          onClick={() => setActiveTab("post")}
-        >
-          ✍️ Post a Blog
-        </button>
-        <button
-          className={`w-full text-left py-2 px-4 rounded-lg transition ${
-            activeTab === "list"
-              ? "bg-orange-500"
-              : "hover:bg-gray-700 bg-gray-800"
-          }`}
-          onClick={() => setActiveTab("list")}
-        >
-          📑 List of Blogs
-        </button>
-      </div>
+      <aside className="w-64 bg-gray-900 text-white flex flex-col p-6 shadow-lg">
+        <h2 className="text-3xl font-bold mb-10 text-center border-b border-gray-700 pb-4">
+          Dashboard
+        </h2>
+        <nav className="flex flex-col gap-3">
+          <button
+            className={`w-full text-left py-3 px-4 rounded-lg transition ${
+              activeTab === "post"
+                ? "bg-orange-500 shadow-lg"
+                : "hover:bg-gray-800 bg-gray-800"
+            }`}
+            onClick={() => setActiveTab("post")}
+          >
+            ✍️ Post a Blog
+          </button>
+          <button
+            className={`w-full text-left py-3 px-4 rounded-lg transition ${
+              activeTab === "list"
+                ? "bg-orange-500 shadow-lg"
+                : "hover:bg-gray-800 bg-gray-800"
+            }`}
+            onClick={() => setActiveTab("list")}
+          >
+            📑 List of Blogs
+          </button>
+        </nav>
+      </aside>
 
       {/* Main Content */}
-      <div className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 p-10 overflow-y-auto">
         {activeTab === "post" ? (
-          <div className=" bg-white shadow-md rounded-xl p-6">
-            <h2 className="text-2xl font-semibold mb-6">Create a New Blog</h2>
-            <form onSubmit={submitHandler} className="flex flex-col gap-4">
+          <div className="bg-white shadow-lg rounded-xl p-8 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-semibold mb-6 border-b pb-4">
+              Create a New Blog
+            </h2>
+            <form onSubmit={submitHandler} className="flex flex-col gap-5">
               <input
                 name="title"
                 value={formData.title}
                 onChange={onChangeHandler}
                 type="text"
                 placeholder="Enter blog title"
-                className="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-orange-400 outline-none"
+                className="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-orange-400 outline-none shadow-sm"
               />
               <input
                 name="category"
@@ -119,17 +128,17 @@ const Dashboard = () => {
                 onChange={onChangeHandler}
                 type="text"
                 placeholder="Enter category"
-                className="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-orange-400 outline-none"
+                className="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-orange-400 outline-none shadow-sm"
               />
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={onChangeHandler}
                 placeholder="Write blog description..."
-                className="border border-gray-300 rounded-lg p-3 h-28 resize-none focus:ring-2 focus:ring-orange-400 outline-none"
+                className="border border-gray-300 rounded-lg p-3 h-32 resize-none focus:ring-2 focus:ring-orange-400 outline-none shadow-sm"
               />
               <div>
-                <label className="block font-medium mb-1">Upload Image</label>
+                <label className="block font-medium mb-2">Upload Image</label>
                 <input
                   onChange={fileHandler}
                   type="file"
@@ -137,22 +146,24 @@ const Dashboard = () => {
                   className="w-full border border-gray-300 rounded-lg p-2 cursor-pointer"
                 />
               </div>
-              <button className="bg-orange-500 hover:bg-orange-600 transition text-white rounded-lg py-2 font-semibold">
+              <button className="bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold shadow-md transition">
                 🚀 Publish Blog
               </button>
             </form>
           </div>
         ) : (
-          <div className="bg-white shadow-md rounded-xl p-6">
-            <h2 className="text-2xl font-semibold mb-6">All Blogs</h2>
+          <div className="bg-white shadow-lg rounded-xl p-8">
+            <h2 className="text-3xl font-semibold mb-6 border-b pb-4">
+              All Blogs
+            </h2>
             <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-                <thead>
-                  <tr className="bg-gray-100 text-gray-700">
-                    <th className="border px-4 py-2">Title</th>
-                    <th className="border px-4 py-2">Category</th>
-                    <th className="border px-4 py-2">Image</th>
-                    <th className="border px-4 py-2">Action</th>
+              <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                <thead className="bg-gray-50 text-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 border-b text-left">Title</th>
+                    <th className="px-6 py-3 border-b text-left">Category</th>
+                    <th className="px-6 py-3 border-b text-center">Image</th>
+                    <th className="px-6 py-3 border-b text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -160,21 +171,21 @@ const Dashboard = () => {
                     blogs.map((blog) => (
                       <tr
                         key={blog._id}
-                        className="text-center hover:bg-gray-50 transition"
+                        className="hover:bg-gray-50 transition"
                       >
-                        <td className="border px-4 py-2">{blog.title}</td>
-                        <td className="border px-4 py-2">{blog.category}</td>
-                        <td className="border px-4 py-2">
+                        <td className="px-6 py-3 border-b">{blog.title}</td>
+                        <td className="px-6 py-3 border-b">{blog.category}</td>
+                        <td className="px-6 py-3 border-b text-center">
                           <img
                             src={`http://localhost:4000/images/${blog.image}`}
                             alt={blog.title}
-                            className="w-16 h-16 object-cover mx-auto rounded-md shadow"
+                            className="w-20 h-20 object-cover mx-auto rounded-md shadow"
                           />
                         </td>
-                        <td className="border px-4 py-2">
+                        <td className="px-6 py-3 border-b text-center">
                           <button
                             onClick={() => removeBlog(blog._id)}
-                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg transition"
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md transition"
                           >
                             ❌ Delete
                           </button>
@@ -183,10 +194,7 @@ const Dashboard = () => {
                     ))
                   ) : (
                     <tr>
-                      <td
-                        colSpan="4"
-                        className="text-gray-500 py-4 text-center italic"
-                      >
+                      <td colSpan="4" className="text-gray-500 py-4 text-center italic">
                         No blogs available
                       </td>
                     </tr>
@@ -196,7 +204,7 @@ const Dashboard = () => {
             </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

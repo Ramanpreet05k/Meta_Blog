@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+
 const Signup = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -9,100 +10,118 @@ const Signup = () => {
     password: "",
     image: null,
   });
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Handle input changes
   const onChangeHandler = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  // Handle file input
   const fileHandler = (e) => {
     setFormData({ ...formData, image: e.target.files[0] });
   };
 
+  // Handle form submission
   const submitHandler = async (e) => {
     e.preventDefault();
+    if (!formData.image) {
+      return toast.error("Please select a profile image");
+    }
+
     try {
+      setLoading(true);
       const data = new FormData();
       data.append("name", formData.name);
       data.append("email", formData.email);
       data.append("password", formData.password);
       data.append("image", formData.image);
-      setLoading(true);
+
       const res = await axios.post(
         "http://localhost:4000/user/register",
         data,
         {
-          headers: {
-            "Content-Type": "multipart/formData",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
+
       if (res.data.success) {
         toast.success(res.data.message);
         navigate("/login");
+      } else {
+        toast.error(res.data.message || "Signup failed");
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || error.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-full bg-pink-200 py-12 mx-auto flex items-center justify-center ">
-      <div className="w-full bg-white max-w-md p-5 mx-auto py-6 border-1 border-gray-200 shadow-md">
-        <h1 className="text-lg font-bold text-center text-gray-700">
-          Create your account!
+    <div className="w-full bg-pink-200 min-h-screen flex items-center justify-center py-12">
+      <div className="bg-white max-w-md w-full p-6 rounded shadow-md border border-gray-200">
+        <h1 className="text-2xl font-bold text-center text-gray-700">
+          Create Your Account
         </h1>
         <form
           onSubmit={submitHandler}
-          className="flex flex-col gap-5 mt-5 w-full"
+          className="flex flex-col gap-4 mt-6"
         >
           <input
-            onChange={onChangeHandler}
+            type="text"
             name="name"
             value={formData.name}
-            type="text"
-            placeholder="Your name"
-            className="w-full p-2 border border-gray-300 rounded outline-none"
+            onChange={onChangeHandler}
+            placeholder="Your Name"
             required
+            className="w-full p-2 border border-gray-300 rounded outline-none focus:ring-2 focus:ring-orange-400"
           />
           <input
-            onChange={onChangeHandler}
+            type="email"
             name="email"
             value={formData.email}
-            type="email"
-            placeholder="Your email"
-            className="w-full p-2 border border-gray-300 rounded outline-none"
+            onChange={onChangeHandler}
+            placeholder="Your Email"
             required
+            className="w-full p-2 border border-gray-300 rounded outline-none focus:ring-2 focus:ring-orange-400"
           />
           <input
-            onChange={onChangeHandler}
+            type="password"
             name="password"
             value={formData.password}
-            type="password"
-            placeholder="Your password"
-            className="w-full p-2 border border-gray-300 rounded outline-none"
+            onChange={onChangeHandler}
+            placeholder="Your Password"
             required
+            className="w-full p-2 border border-gray-300 rounded outline-none focus:ring-2 focus:ring-orange-400"
           />
           <input
-            onChange={fileHandler}
-            accept="image/*"
             type="file"
-            className="w-full p-2 border border-gray-300 rounded outline-none"
+            accept="image/*"
+            onChange={fileHandler}
             required
+            className="w-full p-2 border border-gray-300 rounded outline-none"
           />
-          <button className="bg-orange-600 text-white px-6 py-2 w-full cursor-pointer">
-            Signup
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-2 px-4 rounded text-white ${
+              loading ? "bg-gray-400 cursor-not-allowed" : "bg-orange-600 hover:bg-orange-700"
+            }`}
+          >
+            {loading ? "Signing up..." : "Sign Up"}
           </button>
         </form>
-        <p className="text-center mt-4">
+        <p className="text-center mt-4 text-gray-600">
           Already have an account?{" "}
-          <Link to={"/login"} className="text-orange-600 cursor-pointer">
+          <Link to="/login" className="text-orange-600 hover:underline">
             Login Here
-          </Link>{" "}
+          </Link>
         </p>
       </div>
     </div>
   );
 };
+
 export default Signup;
